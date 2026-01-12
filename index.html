@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow | Modern Task Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-tasks"></i>
+                <h1>TaskFlow</h1>
+                <span class="tagline">Streamline your workflow</span>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-count" id="total-tasks">0</span>
+                    <span class="stat-label">Total Tasks</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-count" id="completed-tasks">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-count" id="pending-tasks">0</span>
+                    <span class="stat-label">Pending</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="app-container">
+                <section class="input-section">
+                    <div class="input-group">
+                        <input type="text" id="task-input" placeholder="Add a new task..." autocomplete="off">
+                        <button id="add-task-btn" class="btn-primary">
+                            <i class="fas fa-plus"></i> Add Task
+                        </button>
+                    </div>
+                    <div class="filters">
+                        <button class="filter-btn active" data-filter="all">All Tasks</button>
+                        <button class="filter-btn" data-filter="pending">Pending</button>
+                        <button class="filter-btn" data-filter="completed">Completed</button>
+                    </div>
+                </section>
+
+                <section class="tasks-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-list-check"></i> Task List</h2>
+                        <div class="task-count">
+                            <span id="visible-task-count">0</span> tasks
+                        </div>
+                    </div>
+                    
+                    <div class="tasks-container">
+                        <ul id="tasks-list">
+                            <!-- Tasks will be added here dynamically -->
+                            <li class="empty-state">
+                                <i class="fas fa-clipboard-list"></i>
+                                <h3>No tasks yet</h3>
+                                <p>Add your first task above to get started!</p>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>TaskFlow &copy; 2023 | Modern Task Management</p>
+        </footer>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Task</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="edit-task-input" placeholder="Edit task...">
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="cancel-edit">Cancel</button>
+                    <button class="btn-primary" id="save-edit">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
