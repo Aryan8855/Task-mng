@@ -1,4 +1,4 @@
-name: Deploy Task Manager App to EC2
+name: Deploy Task Manager to EC2 via ECR
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,8 +21,8 @@ jobs:
 
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region ap-south-1 \
-          | docker login --username AWS --password-stdin 811936641246.dkr.ecr.ap-south-1.amazonaws.com
+          aws ecr get-login-password --region ap-south-1 | \
+          docker login --username AWS --password-stdin 811936641246.dkr.ecr.ap-south-1.amazonaws.com
 
       - name: Build Docker image
         run: |
@@ -31,11 +30,11 @@ jobs:
 
       - name: Tag Docker image
         run: |
-          docker tag task-mng:latest 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng-repo:latest
+          docker tag task-mng:latest 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng:latest
 
-      - name: Push image to ECR
+      - name: Push Docker image to ECR
         run: |
-          docker push 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng-repo:latest
+          docker push 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng:latest
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -44,8 +43,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng-repo:latest
+            docker pull 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng:latest
             docker stop task-mng || true
             docker rm task-mng || true
-            docker run -d -p 80:80 --name task-mng \
-            811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng-repo:latest
+            docker run -d -p 80:80 --name task-mng 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng:latest
