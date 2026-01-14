@@ -1,4 +1,4 @@
-name: CI-CD for Task Manager App
+name: Deploy Task Manager App to EC2
 
 on:
   push:
@@ -13,14 +13,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: CI Step - Check files
-        run: |
-          echo "Running CI checks"
-          ls
-          echo "CI passed"
-
-      - name: CD Step - Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ap-south-1 \
+          | docker login --username AWS --password-stdin 811936641246.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Build Docker image
+        run: |
+          docker build -t task-mng .
+
+      - name: Tag Docker image
+        run: |
+          docker tag task-mng:latest 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng-repo:latest
+
+      - name: Push image to ECR
+        run: |
+          docker push 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng-repo:latest
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng-repo:latest
+            docker stop task-mng || true
+            docker rm task-mng || true
+            docker run -d -p 80:80 --name task-mng \
+            811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng-repo:latest

@@ -1,14 +1,14 @@
-# Use nginx as base image
+# Use official nginx image
 FROM nginx:alpine
 
-# Set working directory inside container
-WORKDIR /app
+# Remove default nginx files
+RUN rm -rf /usr/share/nginx/html/*
 
-# Copy all project files to /app
-COPY . .
+# Copy your website files to nginx folder
+COPY . /usr/share/nginx/html
 
-# Copy files from /app to nginx web directory
-RUN cp -r /app/* /usr/share/nginx/html/
-
-# Expose nginx port
+# Expose port 80
 EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
