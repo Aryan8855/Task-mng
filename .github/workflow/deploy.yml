@@ -1,4 +1,4 @@
-name: Deploy Task Manager to EC2 via ECR
+name: CI-CD Pipeline
 
 on:
   push:
@@ -6,52 +6,52 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # Step 3: Login to Amazon ECR
       - name: Login to Amazon ECR
-        run: |
-          aws ecr get-login-password --region ap-south-1 | \
-          docker login --username AWS --password-stdin 811936641246.dkr.ecr.ap-south-1.amazonaws.com
+        uses: aws-actions/amazon-ecr-login@v2
 
-      # Step 4: Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t task-mng .
+          docker build -t task-mng-repo:latest .
 
-      # Step 5: Tag Docker image
       - name: Tag Docker image
         run: |
-          docker tag task-mng:latest 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng:latest
+          docker tag task-mng-repo:latest \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/task-mng-repo:latest
 
-      # Step 6: Push Docker image to ECR
-      - name: Push Docker image to ECR
+      - name: Push image to ECR
         run: |
-          docker push 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng:latest
+          docker push \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/task-mng-repo:latest
 
-      # Step 7: Deploy Docker on EC2
-      - name: Deploy on EC2
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_PUBLIC_IP }}
-          username: ec2-user
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng:latest
-            docker stop task-mng || true
-            docker rm task-mng || true
-            docker run -d -p 80:80 --name task-mng 811936641246.dkr.ecr.ap-south-1.amazonaws.com/task-mng:latest
+            docker login -u AWS -p $(aws ecr get-login-password --region ap-south-1) \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+            docker pull \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/task-mng-repo:latest
+
+            docker stop task-mng-container || true
+            docker rm task-mng-container || true
+
+            docker run -d -p 80:80 --name task-mng-container \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/task-mng-repo:latest
