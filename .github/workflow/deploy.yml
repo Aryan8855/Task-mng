@@ -24,8 +24,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build Docker image
-        run: |
-          docker build -t task-mng-repo:latest .
+        run: docker build -t task-mng-repo:latest .
 
       - name: Tag Docker image
         run: |
@@ -46,12 +45,8 @@ jobs:
           script: |
             docker login -u AWS -p $(aws ecr get-login-password --region ap-south-1) \
             ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-
-            docker pull \
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/task-mng-repo:latest
-
+            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/task-mng-repo:latest
             docker stop task-mng-container || true
             docker rm task-mng-container || true
-
             docker run -d -p 80:80 --name task-mng-container \
             ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/task-mng-repo:latest
